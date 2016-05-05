@@ -1,0 +1,17 @@
+*.o
+*.exe
+*.aps
+*.suo
+*.user
+*.aps
+*.bat
+
+*.txt
+*.bat
+
+Debug
+Release
+.vs
+train_test
+RBM_Gen_TrainRight
+
