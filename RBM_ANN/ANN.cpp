@@ -94,14 +94,15 @@ void ANN::loadTrainSet(const string& file, uint size, bool divideToTest)
                 trainSet.erase(trainSet.begin() + j);
             }
             cout << "\r>>succeed to load " << trainSet.size() << " train sets, "
-                 << "and generate "<<testSet.size()<<" test sets!("<< elapsed_ms <<" s)"<<endl;
+                 << "and generate " << testSet.size() << " test sets!("
+                 << elapsed_ms << " s)" << endl;
         } else {
             cout << "\r>>succeed to load " << trainSet.size() << " train sets!("
-                 << elapsed_ms <<" s)"<<endl;
+                 << elapsed_ms << " s)" << endl;
         }
     } else {
         string msg = "Failed to load data set file '" + file + "', please check"
-            " if it exists or has access to read!\n";
+                     " if it exists or has access to read!\n";
         throw logic_error(msg);
     }
 }
@@ -132,7 +133,7 @@ void ANN::loadTestSet(const string& file, uint size, bool haveTag)
         cout << "\r>>succeed to load " << testSet.size() << " test sets!" << endl;
     } else {
         string msg = "Failed to load data set file '" + file + "', please check"
-            " if it exists or has access to read!\n";
+                     " if it exists or has access to read!\n";
         throw logic_error(msg);
     }
 }
@@ -168,8 +169,9 @@ void ANN::train(double permitError, uint maxGens)
             if (bestPop.fitValue < permitError)
                 break;
         }
-        if(checkKeyDown()==27 && MessageBox(0, "you pressed ESC ,do you want "\
-            "to stop the evolution?", "tips", MB_YESNO) == IDYES)
+        if (checkKeyDown() == 27 &&
+                MessageBox(0, "you pressed ESC ,do you want to stop the evolution?",
+                           "stop", MB_YESNO | MB_ICONQUESTION) == IDYES)
             break;
     }
     double elapsed_s = 1.0 * (clock() - t_start) / CLOCKS_PER_SEC;
