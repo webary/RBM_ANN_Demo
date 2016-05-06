@@ -76,13 +76,13 @@ public:
     }
 
     //使一个变量的值控制在某个范围内
-    template<typename T1, typename T2, typename T3>
-    static void makeInRange(T1& var, T2 low, T3 high, bool edgeToRand = true)
+    template<typename T1>
+    static void makeInRange(T1& var, double low, double high, bool edgeToRand = true)
     {
         if (var < low)
-            var = edgeToRand ? randFloat(low, high) : (T1)low;
+            var = edgeToRand ? (T1)randFloat(low, high) : (T1)low;
         else if (var > high)
-            var = edgeToRand ? randFloat(low, high) : (T1)high;
+            var = edgeToRand ? (T1)randFloat(low, high) : (T1)high;
     }
 
     //返回绝对值
@@ -92,7 +92,7 @@ public:
         return num > 0 ? num : -num;
     }
 
-    //范围转换模版函数——归一化函数
+    //范围转换模版函数: 归一化函数
     template<class T1, class T2>
     static T1 trans(T2 num, T2 max_T2, T1 stand)
     {

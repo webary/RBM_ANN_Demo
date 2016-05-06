@@ -5,8 +5,6 @@
 #include <fstream>
 #include <iomanip>
 #include <stdexcept> //logic_error
-#include <conio.h>   //getch(), kbhit()
-#include <direct.h>  //_mkdir
 using namespace std;
 
 //初始化网络结构和参数
@@ -252,7 +250,7 @@ void RBM::train(double permitError, uint maxGens)
         throw logic_error("请先载入训练集再开始训练");
     }
     uint i, gen;
-    _mkdir("RBM_Gen_TrainRight");   //创建文件夹
+    createFolder("RBM_Gen_TrainRight");   //创建文件夹
     char tmpbuf[128];
     SPRINTF(tmpbuf, "RBM_Gen_TrainRight/%s.txt", Math_Util::getDateTime(0, '.').c_str());
     ofstream saveRight(tmpbuf);
@@ -289,7 +287,8 @@ void RBM::train(double permitError, uint maxGens)
                     << 1 - rbmPop[best].fitValue << setw(24) << testRight << endl;
                 break;
             }
-            if (_kbhit() && 27 == _getch() && MessageBox(0, "你按了ESC键,是否要结束演化过程?", "温馨提示", MB_YESNO) == IDYES)
+            if(checkKeyDown()==27 && MessageBox(0, "你按了ESC键,是否要结束演化过程?",
+                "温馨提示", MB_YESNO) == IDYES)
                 break;
         } //for (gen)
     } //for (h)
@@ -405,7 +404,7 @@ void RBM::saveBestReTrain(const string& file)
         outFile.close();
     }
     //将数据转换为图像保存
-    ShellExecute(0, "open", "RE2JPG.exe","0", 0, SW_HIDE);
+    ShellExecute(0, "open", "RE2JPG.exe", "0", 0, SW_HIDE);
     //system("RE2JPG.exe 0");
     cout << "\r\t\t\t\r";
 }

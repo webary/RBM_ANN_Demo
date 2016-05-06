@@ -8,6 +8,7 @@
 *.txt
 *.bat
 ANN_Main.exe
+RBM_Main.exe
 RBM_ANN_Main.exe
 
 Debug

@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <cfloat>
 #include <stdexcept> //logic_error
-#include <conio.h>
 using namespace std;
 
 const float ANN::F_ANN = 0.3f; //神经网络的变异系数
@@ -94,13 +93,11 @@ void ANN::loadTrainSet(const string& file, uint size, bool divideToTest)
                 trainSet.erase(trainSet.begin() + j);
             }
             cout << "\r>>成功载入" << trainSet.size() << "组训练集, 并生成"
-                << testSet.size() << "组测试集(" << (clock() - t1) / 1000.0 << "s)\n";
-        }
-        else {
+                 << testSet.size() << "组测试集(" << (clock() - t1) / 1000.0 << "s)\n";
+        } else {
             cout << "\r>>成功载入" << trainSet.size() << "组训练集(" << (clock() - t1) / 1000.0 << "s)\n";
         }
-    }
-    else {
+    } else {
         string msg = "载入数据集文件'" + file + "失败，请检查该文件是否存在，或有权限读取\n";
         throw logic_error(msg);
     }
@@ -130,8 +127,7 @@ void ANN::loadTestSet(const string& file, uint size, bool haveTag)
         }
         loadFile.close();
         cout << "\r>>成功载入" << testSet.size() << "组测试集\t" << endl;
-    }
-    else {
+    } else {
         string msg = "载入数据集文件'" + file + "失败，请检查该文件是否存在，或有权限读取\n";
         throw logic_error(msg);
     }
@@ -156,8 +152,8 @@ void ANN::train(double permitError, uint maxGens)
         const ANN::ANNIndividual &bestPop = getBestPop();
         if (i % 200 == 0 || clock() - lastStart > 200) {
             cout << '\r' << setiosflags(ios::left) << setw(8) << i << setw(16)
-                << 1 - bestPop.fitValue << setw(16) << compareTestOut()
-                << (clock() - lastStart) / (i - lastGen) << '\t';
+                 << 1 - bestPop.fitValue << setw(16) << compareTestOut()
+                 << (clock() - lastStart) / (i - lastGen) << '\t';
             lastStart = clock();
             lastGen = i;
             if (lastFitValue - bestPop.fitValue > 0.008) {
@@ -167,8 +163,8 @@ void ANN::train(double permitError, uint maxGens)
             if (bestPop.fitValue < permitError)
                 break;
         }
-        if (_kbhit() && 27 == _getch() && MessageBox(0, "你按了ESC键,是否要结束演化过程?"
-            , "温馨提示", MB_YESNO) == IDYES)
+        if(checkKeyDown()==27 && MessageBox(0, "你按了ESC键,是否要结束演化过程?",
+            "温馨提示", MB_YESNO) == IDYES)
             break;
     }
     if (clock() - t_start > 60000)
@@ -244,7 +240,7 @@ uint ANN::getANNOut(const ANNInput& _input, const ANNIndividual& indiv)
         for (k = 0; k < layer.hide[index].size(); ++k)
             sum += layer.hide[index][k] * indiv.weight[index + 1][j][k];
         sum += indiv.bias[index + 1][j];
-        if (sum > maxOutput){ //softmax回归法: 标签为具有最大输出值的神经元序号
+        if (sum > maxOutput) { //softmax回归法: 标签为具有最大输出值的神经元序号
             maxOutput = sum;
             layer.tag = j;
         }

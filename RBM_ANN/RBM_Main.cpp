@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "RBM.h"
 #include "Math_Util.hpp"
 #include <iostream>

@@ -19,7 +19,7 @@ TrainTxt tt__[] = {
 int main()
 {
     try {
-        TrainTxt& tt = tt__[2]; ///通过修改序号载入不同的训练集
+        TrainTxt& tt = tt__[3]; ///通过修改序号载入不同的训练集
         ANN ann(784, tt.n_out, 1); //输入数据维数, 输出层结点个数, 隐藏层层数
         ann.loadTrainSet(tt.file, tt.n_train);
         ann.train(0.01, 1000000);

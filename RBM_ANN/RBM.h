@@ -29,8 +29,8 @@ public:
         float fitValue;      //适应值,该个体训练的实际误差,即每一维差值之和
     } RBMIndividual;         //定义个体类型,包含所有可训练参数的集合
 
-    //参数分别是[输入数据维数,如果是图像是指平铺后大小],[内部网络每层的神经元个数],
-    //[参与演化个体数]
+    //参数分别是[输入数据维数, 如果是图像是指平铺后大小],
+    //[内部网络每层的神经元个数], [参与演化个体数]
     RBM(uint _inputSize, const vectorU& hiddenSizes, double learnRate = .5, uint _popSize = 1)
     {
         init(_inputSize, hiddenSizes, learnRate, _popSize);
