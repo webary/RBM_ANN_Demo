@@ -35,7 +35,7 @@ public:
     {
         init(_inputSize, hiddenSizes, learnRate, _popSize);
     }
-    
+
     template<int n>
     RBM(uint _inputSize, const int(&hiddenSizes)[n], double learnRate = .5, uint _popSize = 1)
     {
@@ -43,9 +43,9 @@ public:
     }
     virtual ~RBM() {}
     //从文件file载入size组训练集数据,divideToTest标记是否将部分数据作为测试集
-    void loadTrain(const string& file, uint size = 0, bool divideToTest = 1);
+    void loadTrainSet(const string& file, uint size = 0, bool divideToTest = 1);
     //从文件载入测试数据
-    void loadTest(const string& file, uint size = 0, bool haveTag = 0);
+    void loadTestSet(const string& file, uint size = 0, bool haveTag = 0);
     //开始训练
     void train(double permitError = 0.05, uint maxGens = 100000);
     //将RBM最后一层的数据输出到文件

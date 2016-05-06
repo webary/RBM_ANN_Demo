@@ -53,7 +53,7 @@ void RBM::init(uint _inputSize, const vectorU& hiddenSizes, double learnRate, ui
     bestPopIndex = 0;
 }
 //从文件file载入size组训练集数据,divideToTest标记是否将部分数据作为测试集
-void RBM::loadTrain(const string& file, uint size, bool divideToTest)
+void RBM::loadTrainSet(const string& file, uint size, bool divideToTest)
 {
     if (file == "")
         return;
@@ -98,7 +98,7 @@ void RBM::loadTrain(const string& file, uint size, bool divideToTest)
     }
 }
 //从文件载入测试数据
-void RBM::loadTest(const string& file, uint size, bool haveTag)
+void RBM::loadTestSet(const string& file, uint size, bool haveTag)
 {
     if (file == "")
         return;
@@ -232,7 +232,7 @@ float RBM::getFitValue(const RBMIndividual& _rbmPop, const vector<RBMInput>& dat
             forward(hidden[h - 1], hidden[h], _rbmPop.weight[h], _rbmPop.hbias[h]);
         h = hideIndex;
         backward(new_vis, hidden[h], _rbmPop.weight[h], _rbmPop.vbias[h]);
-        //对比分歧
+        //对比分歧算法(contrastive divergence,CD),也叫对比散度
         for (j = 0; j < new_vis.size(); ++j) {
             float err = 0;
             if (h == 0)
@@ -269,37 +269,38 @@ void RBM::train(double permitError, uint maxGens)
         cout << "\n>>>hide<" << h << ">\nGen\ttrain accuracy\ttest accuracy\t"
              "average elapsed(ms)" << endl;
         setGreen();
-        float lastError = 1, testRight = 0;
+        float lastError = 1, testRight = 0, trainError;
         clock_t t_start = clock(), t_end = 0, lastGen = -1;
         for (gen = 0; gen <= maxGens; ++gen) {
             for (i = 0; i < rbmPop.size(); ++i)
                 adjust_hvh(rbmPop[i], h);
             uint best = findBestPop();
+            trainError = rbmPop[best].fitValue; //当前最好个体在训练集上的误差
             t_end = clock();
             if (t_end - t_start > 200 || gen % 5 == 0) {  //不断刷新当前进度
                 testRight = 1 - getFitValue(rbmPop[best], testSet, h);
                 double elapsed_ms = 1000.0 * (t_end - t_start) / CLOCKS_PER_SEC;
-                cout << "\r" << setw(40) << " " << "\r" << gen << "\t" << setw(16)
-                     << setiosflags(ios::left) << 1 - rbmPop[best].fitValue
+                cout << "\r" << setw(40) << " " << "\r" << gen << "\t"
+                     << setw(16)<< setiosflags(ios::left) << 1 - trainError
                      << setw(16) << testRight << elapsed_ms / (gen - lastGen);
-                if ((gen % 100 == 0 && lastError - rbmPop[best].fitValue > 0.005)
-                        || lastError - rbmPop[best].fitValue > 0.04) {
+                if ((gen % 100 == 0 && lastError - trainError > 0.005)
+                        || lastError - trainError > 0.04) {
                     cout << "\nsaving the parameters of the best pop...";
                     saveRight << gen << "\t" << setw(16) << setiosflags(ios::left)
-                              << 1 - rbmPop[best].fitValue << setw(24) << testRight << endl;
-                    lastError = rbmPop[best].fitValue;
+                              << 1 - trainError << setw(24) << testRight << endl;
+                    lastError = trainError;
                     cout << "\r\t\t\t\t\t\t\r";
                 }
                 lastGen = gen;
                 t_start = t_end;
             }
-            if (rbmPop[best].fitValue < permitError) {
+            if (trainError < permitError) {
                 saveRight << gen << "\t" << setw(16) << setiosflags(ios::left)
-                          << 1 - rbmPop[best].fitValue << setw(24) << testRight << endl;
+                          << 1 - trainError << setw(24) << testRight << endl;
                 break;
             }
             if (checkKeyDown() == 27 &&
-                    MessageBox(0, "you pressed ESC ,do you want to stop the evolution?",
+                    MessageBox(0, "Do you want to stop the evolution?",
                                "stop", MB_YESNO | MB_ICONQUESTION) == IDYES)
                 break;
         } //for (gen)
@@ -420,7 +421,7 @@ void RBM::saveBestReTrain(const string& file)
     //将数据转换为图像保存
     ShellExecute(0, "open", "RE2JPG.exe", "0", 0, SW_HIDE);
     //system("RE2JPG.exe 0");
-    cout << "\r\t\t\t\r";
+    cout << "\r\t\t\t\t\t\t\r";
 }
 //查找当前最好个体
 uint RBM::findBestPop()

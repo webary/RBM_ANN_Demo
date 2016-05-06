@@ -25,7 +25,7 @@ int main()
     try {
         int hideUnits[] = { 100, 25 };
         RBM rbm(784, hideUnits);
-        rbm.loadTrain(tt.file, tt.n_train);
+        rbm.loadTrainSet(tt.file, tt.n_train);
         rbm.train(0.02, 10000);  //允许误差和最大代数,任意一个满足则停止
     } catch (const logic_error &err) {
         cout << "\r---error:" << err.what() << endl;
