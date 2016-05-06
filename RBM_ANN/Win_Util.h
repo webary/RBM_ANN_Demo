@@ -34,9 +34,6 @@
 #define MB_YESNO 4
 #define IDYES    6
 #define ShellExecute(...)
-#ifndef CLK_TCK
-#   define CLK_TCK 1000000
-#endif // CLK_TCK
 inline char checkKeyDown()
 {
     system("stty cbreak -echo");

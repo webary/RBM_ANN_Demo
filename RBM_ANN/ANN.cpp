@@ -68,8 +68,8 @@ void ANN::loadTrainSet(const string& file, uint size, bool divideToTest)
         return;
     ifstream loadFile(file.c_str());
     if (loadFile.is_open()) {
-        cout << "正在读取训练集数据, 请稍后...";
-        time_t t1 = clock();
+        cout << "reading train set...";
+        clock_t t1 = clock();
         trainSet.clear();
         if (size > 0)
             trainSet.reserve(size);
@@ -85,6 +85,7 @@ void ANN::loadTrainSet(const string& file, uint size, bool divideToTest)
             trainSet.push_back(input);
         }
         loadFile.close();
+        double elapsed_ms = 1.0 * (clock() - t1) / CLOCKS_PER_SEC;
         if (divideToTest) { //随机将部分数据作为测试集
             testSet.resize(trainSet.size() / 5);
             for (i = 0; i < testSet.size(); ++i) {
@@ -92,13 +93,15 @@ void ANN::loadTrainSet(const string& file, uint size, bool divideToTest)
                 testSet[i] = trainSet[j];
                 trainSet.erase(trainSet.begin() + j);
             }
-            cout << "\r>>成功载入" << trainSet.size() << "组训练集, 并生成"
-                 << testSet.size() << "组测试集(" << (clock() - t1) / 1000.0 << "s)\n";
+            cout << "\r>>succeed to load " << trainSet.size() << " train sets, "
+                 << "and generate "<<testSet.size()<<" test sets!("<< elapsed_ms <<" s)"<<endl;
         } else {
-            cout << "\r>>成功载入" << trainSet.size() << "组训练集(" << (clock() - t1) / 1000.0 << "s)\n";
+            cout << "\r>>succeed to load " << trainSet.size() << " train sets!("
+                 << elapsed_ms <<" s)"<<endl;
         }
     } else {
-        string msg = "载入数据集文件'" + file + "失败，请检查该文件是否存在，或有权限读取\n";
+        string msg = "Failed to load data set file '" + file + "', please check"
+            " if it exists or has access to read!\n";
         throw logic_error(msg);
     }
 }
@@ -110,7 +113,7 @@ void ANN::loadTestSet(const string& file, uint size, bool haveTag)
         return;
     ifstream loadFile(file.c_str());
     if (loadFile.is_open()) {
-        cout << "正在读取测试集数据, 请稍后...";
+        cout << "reading test set...";
         testSet.clear();
         if (size > 0)
             testSet.reserve(size);
@@ -126,9 +129,10 @@ void ANN::loadTestSet(const string& file, uint size, bool haveTag)
             testSet.push_back(input);
         }
         loadFile.close();
-        cout << "\r>>成功载入" << testSet.size() << "组测试集\t" << endl;
+        cout << "\r>>succeed to load " << testSet.size() << " test sets!" << endl;
     } else {
-        string msg = "载入数据集文件'" + file + "失败，请检查该文件是否存在，或有权限读取\n";
+        string msg = "Failed to load data set file '" + file + "', please check"
+            " if it exists or has access to read!\n";
         throw logic_error(msg);
     }
 }
@@ -137,13 +141,13 @@ void ANN::loadTestSet(const string& file, uint size, bool haveTag)
 void ANN::train(double permitError, uint maxGens)
 {
     if (trainSet.size() == 0) {
-        cout << "请先载入训练数据再进行训练!" << endl;
+        cout << "please load train set first!" << endl;
         return;
     }
-    cout << ">>>正在开始演化...\n代数\t训练正确率\t测试正确率\t平均每代耗时:ms" << endl;
+    cout << ">>>Evolving...\nGen\ttrain accuracy\ttest accuracy\taverage elapsed(ms)" << endl;
     for (uint p = 0; p < annPop.size(); ++p)
         getFitValue(annPop[p]);  //计算初始化时个体的适应值
-    time_t lastStart = clock(), t_start = lastStart;
+    clock_t lastStart = clock(), t_start = lastStart;
     float lastFitValue = 1;
     uint lastGen = -1;
     for (uint i = 0; i < maxGens; ++i) {
@@ -151,9 +155,10 @@ void ANN::train(double permitError, uint maxGens)
             mutate(annPop[p]);
         const ANN::ANNIndividual &bestPop = getBestPop();
         if (i % 200 == 0 || clock() - lastStart > 200) {
+            double elapsed_ms = 1000.0 * (clock() - lastStart) / CLOCKS_PER_SEC;
             cout << '\r' << setiosflags(ios::left) << setw(8) << i << setw(16)
                  << 1 - bestPop.fitValue << setw(16) << compareTestOut()
-                 << (clock() - lastStart) / (i - lastGen) << '\t';
+                 << elapsed_ms / (i - lastGen) << '\t';
             lastStart = clock();
             lastGen = i;
             if (lastFitValue - bestPop.fitValue > 0.008) {
@@ -163,14 +168,15 @@ void ANN::train(double permitError, uint maxGens)
             if (bestPop.fitValue < permitError)
                 break;
         }
-        if(checkKeyDown()==27 && MessageBox(0, "你按了ESC键,是否要结束演化过程?",
-            "温馨提示", MB_YESNO) == IDYES)
+        if(checkKeyDown()==27 && MessageBox(0, "you pressed ESC ,do you want "\
+            "to stop the evolution?", "tips", MB_YESNO) == IDYES)
             break;
     }
-    if (clock() - t_start > 60000)
-        cout << endl << "演化过程总耗时: " << (clock() - t_start) / 60000.0 << " min" << endl;
+    double elapsed_s = 1.0 * (clock() - t_start) / CLOCKS_PER_SEC;
+    if (elapsed_s > 60)
+        cout << endl << "time elapsed: " << elapsed_s / 60 << " min" << endl;
     else
-        cout << endl << "演化过程总耗时: " << (clock() - t_start) / 1000.0 << " s" << endl;
+        cout << endl << "time elapsed: " << elapsed_s << " s" << endl;
 }
 
 //根据训练好的网络,获得测试集预测结果

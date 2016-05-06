@@ -1,5 +1,4 @@
 #include "RBM.h"
-#include "Win_Util.h"
 #include "Math_Util.hpp"
 #include <iostream>
 #include <fstream>
