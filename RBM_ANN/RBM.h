@@ -31,15 +31,15 @@ public:
 
     //参数分别是[输入数据维数, 如果是图像是指平铺后大小],
     //[内部网络每层的神经元个数], [参与演化个体数]
-    RBM(uint _inputSize, const vectorU& hiddenSizes, double learnRate = .5, uint _popSize = 1)
+    RBM(uint _inputSize, const vectorU& hideSizes, double learnRate = .5, uint _popSize = 1)
     {
-        init(_inputSize, hiddenSizes, learnRate, _popSize);
+        init(_inputSize, hideSizes, learnRate, _popSize);
     }
 
     template<int n>
-    RBM(uint _inputSize, const int(&hiddenSizes)[n], double learnRate = .5, uint _popSize = 1)
+    RBM(uint _inputSize, const int(&hideSizes)[n], double learnRate = .5, uint _popSize = 1)
     {
-        init(_inputSize, vector<uint>(hiddenSizes, hiddenSizes + n), learnRate, _popSize);
+        init(_inputSize, vectorU(hideSizes, hideSizes + n), learnRate, _popSize);
     }
     virtual ~RBM() {}
     //从文件file载入size组训练集数据,divideToTest标记是否将部分数据作为测试集
@@ -56,7 +56,7 @@ public:
     void randomDivideTrainToTest(double ratio);
 protected:
     //初始化网络结构和参数
-    void init(uint _inputSize, const vectorU& hiddenSizes, double learnRate = .5, uint _popSize = 1);
+    void init(uint _inputSize, const vectorU& hideSizes, double learnRate = .5, uint _popSize = 1);
     //前向传递
     void forward(const vectorF& vis, vectorF& hide, const vectorF2D& wt, const vectorF& b);
     //反向传播

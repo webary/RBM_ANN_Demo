@@ -312,7 +312,7 @@ void RBM::train(double permitError, uint maxGens)
     saveBestReTrain("reTrain.txt");
 }
 //将RBM最后一层的数据输出到文件
-void RBM::saveRBMOutToFile(const std::string& file)
+void RBM::saveRBMOutToFile(const string& file)
 {
     ofstream fileOut(file.c_str());
     if (fileOut.is_open()) {
