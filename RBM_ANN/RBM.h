@@ -24,8 +24,8 @@ public:
     } RBMInput;              //玻尔兹曼机输入类型
     typedef struct {
         vectorF3D weight;    //权重
-        vectorF2D hbias;     //偏置参数，隐层中每个神经元有一个偏置[正向偏置]
-        vectorF2D vbias;     //偏置参数，隐层中每个神经元有一个偏置[反向偏置]
+        vectorF2D hbias;     //正向偏置参数，隐层中每个神经元有一个正向偏置
+        vectorF2D vbias;     //反向偏置参数，除最后一个隐层外每个神经元有一个反向偏置
         float fitValue;      //适应值,该个体训练的实际误差,即每一维差值之和
     } RBMIndividual;         //定义个体类型,包含所有可训练参数的集合
 
@@ -49,9 +49,9 @@ public:
     //开始训练
     void train(double permitError = 0.05, uint maxGens = 100000);
     //将RBM最后一层的数据输出到文件
-    void saveRBMOutToFile(const string& file);
+    void saveRBMOutToFile(const string& file,bool enableTrainSet = 1, bool enableTestset = 1);
     //得到RBM的最后一层的输出
-    vector<RBMInput> getRBMOut();
+    vector<RBMInput> getRBMOut(bool enableTrainSet = 1, bool enableTestset = 1);
     //从训练集中随机抽取ratio比例数据作为测试集[训练集中这些数据将剔除]
     void randomDivideTrainToTest(double ratio);
 protected:

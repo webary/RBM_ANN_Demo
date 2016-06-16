@@ -16,7 +16,8 @@ typedef vector<unsigned> vectorU;
 /**
  * 经典神经网络类
  **/
-class ANN {
+class ANN
+{
 public:
     typedef struct {
         vectorF data;  //输入数据部分
@@ -46,16 +47,16 @@ public:
     //开始训练神经网络 @param: 允许误差 0.0~1.0 ; 最大迭代次数
     void train(double permitError, uint maxGens = 100000);
     //根据训练好的网络,获得测试集预测结果
-    void getTestOut();
+    vector<int> getTestOut() const;
     //对比测试集的输出,返回正确率---前提是已知每组测试数据的输出
-    float compareTestOut();
+    float compareTestOut() const;
     //从训练集中随机抽取ratio比例数据作为测试集[训练集中这些数据将剔除]
     void randomDivideTrainToTest(double ratio = 0.25);
 protected:
     //对网络结构及可演化参数进行初始化
     void init(uint inputSize, uint outputNums, uint hideLayers = 2);
     //计算某组输入数据对应的网络输出 (预测标签)
-    uint getANNOut(const ANNInput& _input, const ANNIndividual& indiv);
+    uint getANNOut(const ANNInput& _input, const ANNIndividual& indiv) const;
     //计算个体的适应值
     float getFitValue(ANNIndividual& indiv);
     //个体变异并选择更优个体进入下一代
@@ -63,9 +64,9 @@ protected:
     //通过高斯变异方式调整参数---mutate的一种实现方式
     void mutateByGauss(ANNIndividual& tmpPop);
     //返回最优个体的常引用
-    const ANNIndividual& getBestPop();
+    const ANNIndividual& getBestPop() const;
 protected:
-    ANNLayer layer;               //神经结构层
+    mutable ANNLayer layer;       //神经结构层
     vector<ANNInput> trainSet;    //神经网络训练数据
     vector<ANNInput> testSet;     //神经网络测试数据
     vector<ANNIndividual> annPop; //多个个体组成的种群

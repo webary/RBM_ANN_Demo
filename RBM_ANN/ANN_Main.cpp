@@ -19,8 +19,10 @@ TrainTxt tt__[] = {
 
 int main()
 {
-    TrainTxt& tt = tt__[1]; ///通过修改序号载入不同的训练集
+    int idx = GetPrivateProfileInt("ANN", "TrainTxtIdx", 0, ".\\set.ini");
+    TrainTxt& tt = tt__[idx]; ///通过修改序号载入不同的训练集
     cout << Math_Util::getDateTime() << "\t" << tt.file << "\t" << tt.n_train << endl;
+    SetText(FG_HL | FG_G | FG_B);
     try {
         ANN ann(784, tt.n_out, 1); //输入数据维数, 输出层结点个数, 隐藏层层数
         ann.loadTrainSet(tt.file, tt.n_train);

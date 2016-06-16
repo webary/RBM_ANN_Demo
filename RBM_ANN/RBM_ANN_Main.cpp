@@ -18,14 +18,42 @@ TrainTxt tt__[] = {
     { "./train_test/train0123456789.txt", 10, 1250},   //[4]
 };
 
+void getImgPredictOut(RBM& rbm, ANN& ann)
+{
+    string file;
+    while (getline(cin, file)) {
+        system(("saveRGBToFile.exe " + file).c_str());
+        char saveToFile[255] = "";
+        GetPrivateProfileString("saveRGBToFile", "saveToFile", "", saveToFile, 255, ".\\set.ini");
+        streambuf* coutBuf = cout.rdbuf();
+        ofstream fout("tmp");
+        cout.rdbuf(fout.rdbuf());
+        rbm.loadTestSet(saveToFile, 0, 0);
+        DeleteFile(saveToFile);
+        rbm.saveRBMOutToFile("rbm.out", 0);
+        ann.loadTestSet("rbm.out", 0, 0);
+        DeleteFile("rbm.out");
+        vector<int> tags = ann.getTestOut();
+        fout.close();
+        cout.rdbuf(coutBuf);
+        DeleteFile("tmp");
+        for (auto& elem : tags)
+            cout << elem << " ";
+        cout << endl;
+    }
+}
+
 int main()
 {
-    TrainTxt& tt = tt__[1]; ///通过修改序号载入不同的训练集
+    int idx = GetPrivateProfileInt("RBM_ANN", "TrainTxtIdx", 0, ".\\set.ini");
+    char learnRate[10] = "";
+    GetPrivateProfileString("RBM_ANN", "LearnRate", "0.3", learnRate, 10, ".\\set.ini");
+    TrainTxt& tt = tt__[idx]; ///通过修改序号载入不同的训练集
     cout << Math_Util::getDateTime() << "\t" << tt.file << "\t" << tt.n_train << endl;
     SetText(FG_HL | FG_G | FG_B);
     try {
-        int hideUnits[] = { 144, 36 };
-        RBM rbm(784, hideUnits);
+        int hideUnits[] = { 196, 49 };
+        RBM rbm(784, hideUnits, atof(learnRate));
         rbm.loadTrainSet(tt.file, tt.n_train);
         rbm.train(0.05, 10000);  //允许误差和最大代数，任意一个满足则停止
         rbm.saveRBMOutToFile("rbmOut.txt"); //将RBM的输出层以及标签保存到文件
@@ -34,7 +62,8 @@ int main()
         ///将RBM抽取的特征送到ANN中进行分类
         ANN ann(rbmOutSize, tt.n_out, 1); //输入数据大小,输出层神经元个数,隐层层数
         ann.loadTrainSet("rbmOut.txt"); //读取RBM的输出作为ANN的训练数据
-        ann.train(0.02, 1000000);
+        ann.train(0.001, 1000000);
+        getImgPredictOut(rbm, ann);
     } catch (const logic_error& err) {
         cout << "\r---error:" << err.what() << endl;
     } catch (...) {

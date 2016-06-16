@@ -37,7 +37,7 @@ void ANN::init(uint inputSize, uint outputNums, uint hideLayers)
     for (p = 0; p < annPop.size(); ++p) {
         annPop[p].weight.resize(hideLayers + 1); //隐含层和输出层每个神经元都有一组权值
         annPop[p].bias.resize(hideLayers + 1);   //隐含层和输出层每个神经元都有一个偏置
-        uint hideNums = layer.input.size() / 10; //隐藏层每层的神经元个数
+        uint hideNums = sqrt(1.0 + layer.output.size() * layer.input.size() / 3); //隐藏层每层的神经元个数
         for (i = 0; i < hideLayers; ++i) {
             layer.hide[i].resize(hideNums);
             annPop[p].weight[i].resize(hideNums);
@@ -155,7 +155,7 @@ void ANN::train(double permitError, uint maxGens)
         for (uint p = 0; p < annPop.size(); ++p)
             mutate(annPop[p]);
         const ANN::ANNIndividual &bestPop = getBestPop();
-        if (i % 200 == 0 || clock() - lastStart > 200) {
+        if (i % 10 == 0 || clock() - lastStart > 200) {
             double elapsed_ms = 1000.0 * (clock() - lastStart) / CLOCKS_PER_SEC;
             cout << '\r' << setiosflags(ios::left) << setw(8) << i << setw(16)
                  << 1 - bestPop.fitValue << setw(16) << compareTestOut()
@@ -182,14 +182,20 @@ void ANN::train(double permitError, uint maxGens)
 }
 
 //根据训练好的网络,获得测试集预测结果
-void ANN::getTestOut()
+vector<int> ANN::getTestOut() const
 {
     if (testSet.size() == 0)
-        return;
+        return vector<int>();
+    vector<int> tagOut(testSet.size());
+    const ANNIndividual& bestPop = getBestPop();
+    for (int i = 0; i < testSet.size(); ++i) {
+        tagOut[i] = getANNOut(testSet[i], bestPop);
+    }
+    return tagOut;
 }
 
 //对比测试集的输出,返回正确率. [note:前提是已知每组测试数据的输出]
-float ANN::compareTestOut()
+float ANN::compareTestOut() const
 {
     if (testSet.size() == 0)
         return 0;
@@ -220,7 +226,7 @@ void ANN::randomDivideTrainToTest(double ratio)
 }
 
 //计算某组输入数据对应的网络输出
-uint ANN::getANNOut(const ANNInput& _input, const ANNIndividual& indiv)
+uint ANN::getANNOut(const ANNInput& _input, const ANNIndividual& indiv) const
 {
     uint j, k, index;
     ///为了减少计算消耗,略去由_input.data到layer.input的复制过程
@@ -230,6 +236,7 @@ uint ANN::getANNOut(const ANNInput& _input, const ANNIndividual& indiv)
         for (k = 0; k < _input.data.size(); ++k)
             layer.hide[0][j] += _input.data[k] * indiv.weight[0][j][k];
         layer.hide[0][j] += indiv.bias[0][j];
+        //layer.hide[0][j] = Math_Util::tansig(layer.hide[0][j]);
     }
     //后面的隐层由前一个隐层和对应权值得到
     for (index = 1; index < layer.hide.size(); ++index)
@@ -238,6 +245,7 @@ uint ANN::getANNOut(const ANNInput& _input, const ANNIndividual& indiv)
             for (k = 0; k < layer.hide[index - 1].size(); ++k)
                 layer.hide[index][j] += layer.hide[index - 1][k] * indiv.weight[index][j][k];
             layer.hide[index][j] += indiv.bias[index][j];
+            //layer.hide[index][j] = Math_Util::tansig(layer.hide[index][j]);
         }
     //输出层由最后一个隐层和对应的权值得到
     layer.tag = 0;
@@ -309,7 +317,7 @@ void ANN::mutateByGauss(ANNIndividual& tmpPop)
 }
 
 //返回最优个体的常引用
-const ANN::ANNIndividual& ANN::getBestPop()
+const ANN::ANNIndividual& ANN::getBestPop() const
 {
     float bestFitVlue = annPop[0].fitValue;
     uint best = 0;

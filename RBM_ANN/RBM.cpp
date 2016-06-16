@@ -59,7 +59,7 @@ void RBM::loadTrainSet(const string& file, uint size, bool divideToTest)
         return;
     ifstream loadFile(file.c_str());
     if (loadFile.is_open()) {
-        cout << "loading train set...";
+        cout << "\r\t\t\t\t\t\t\r>>loading train set...";
         clock_t t1 = clock();
         trainSet.clear();
         if (size > 0)
@@ -71,7 +71,7 @@ void RBM::loadTrainSet(const string& file, uint size, bool divideToTest)
                 if (!(loadFile >> input.data[j]))
                     break;
             //该组数据没有读取完整,则不加入训练集
-            if (!(loadFile >> input.tag))
+            if (j < input.data.size() || !(loadFile >> input.tag))
                 break;
             trainSet.push_back(input);
         }
@@ -104,7 +104,7 @@ void RBM::loadTestSet(const string& file, uint size, bool haveTag)
         return;
     ifstream loadFile(file.c_str());
     if (loadFile.is_open()) {
-        cout << "loading test set...";
+        cout << "\r\t\t\t\t\t\t\r>>loading test set...";
         testSet.clear();
         if (size > 0)
             testSet.reserve(size);
@@ -115,7 +115,7 @@ void RBM::loadTestSet(const string& file, uint size, bool haveTag)
                 if (!(loadFile >> input.data[j]))
                     break;
             //该组数据没有读取完整，则删掉
-            if (haveTag && !(loadFile >> input.tag))
+            if (j < input.data.size() || haveTag && !(loadFile >> input.tag))
                 break;
             testSet.push_back(input);
         }
@@ -134,7 +134,7 @@ bool RBM::loadParam(const string& file)
         return false;
     ifstream loadFile(file.c_str());
     if (loadFile.is_open()) {
-        cout << ">>>loading prefetch evolution file...";
+        cout << "\r>>loading prefetch evolution file...";
         uint i, j, k;
         try {
             for (i = 0; i < rbmPop[0].weight.size(); ++i) {
@@ -201,6 +201,7 @@ double RBM::adjust_hvh(RBMIndividual& _rbmPop, uint hideIndex)
         backward(new_vis, hidden[h], _rbmPop.weight[h], _rbmPop.vbias[h]); //h->v'
         forward(new_vis, new_hide, _rbmPop.weight[h], _rbmPop.hbias[h]); //v'->h'
 
+        //对比分歧算法(contrastive divergence,CD),也叫对比散度
         //修正该层所有权值
         for (i = 0; i < new_vis.size(); ++i)
             for (j = 0; j < new_hide.size(); ++j)
@@ -219,21 +220,25 @@ double RBM::adjust_hvh(RBMIndividual& _rbmPop, uint hideIndex)
 //获取个体_rbmPop在dataSet数据上第hideindex层的适应值
 float RBM::getFitValue(const RBMIndividual& _rbmPop, const vector<RBMInput>& dataSet, uint hideIndex)
 {
-    uint ts, j, h;
+    if (dataSet.size() == 0) { //还没有数据
+        cout << "there are some errors in data set, please check it!\n in "
+             << __FILE__ << ":" << __LINE__ << endl;
+        return 1;
+    }
     vectorF new_vis;  //反演得到的显层 h->v'
     float fitValue = 0;
     if (hideIndex == 0)
         new_vis = dataSet[0].data;
     else
         new_vis = hidden[hideIndex - 1];
-    for (ts = 0; ts < dataSet.size(); ++ts) {
+    for (uint ts = 0, h; ts < dataSet.size(); ++ts) {
         forward(dataSet[ts].data, hidden[0], _rbmPop.weight[0], _rbmPop.hbias[0]);
         for (h = 1; h <= hideIndex; ++h) //更新隐层h
             forward(hidden[h - 1], hidden[h], _rbmPop.weight[h], _rbmPop.hbias[h]);
         h = hideIndex;
         backward(new_vis, hidden[h], _rbmPop.weight[h], _rbmPop.vbias[h]);
         //对比分歧算法(contrastive divergence,CD),也叫对比散度
-        for (j = 0; j < new_vis.size(); ++j) {
+        for (uint j = 0; j < new_vis.size(); ++j) {
             float err = 0;
             if (h == 0)
                 err = Math_Util::myAbs(dataSet[ts].data[j] - new_vis[j]);
@@ -242,12 +247,7 @@ float RBM::getFitValue(const RBMIndividual& _rbmPop, const vector<RBMInput>& dat
             fitValue += err;
         }
     }
-    if (ts == 0) { //还没有训练数据
-        cout << "there are some errors in train set, please check it!"
-             << __FILE__ << ":" << __LINE__ << endl;
-        return 1;
-    }
-    return fitValue / (ts * new_vis.size());
+    return fitValue / (dataSet.size() * new_vis.size());
 }
 //开始训练
 void RBM::train(double permitError, uint maxGens)
@@ -281,10 +281,10 @@ void RBM::train(double permitError, uint maxGens)
                 testRight = 1 - getFitValue(rbmPop[best], testSet, h);
                 double elapsed_ms = 1000.0 * (t_end - t_start) / CLOCKS_PER_SEC;
                 cout << "\r" << setw(40) << " " << "\r" << gen << "\t"
-                     << setw(16)<< setiosflags(ios::left) << 1 - trainError
+                     << setw(16) << setiosflags(ios::left) << 1 - trainError
                      << setw(16) << testRight << elapsed_ms / (gen - lastGen);
                 if ((gen % 100 == 0 && lastError - trainError > 0.005)
-                        || lastError - trainError > 0.04) {
+                        || lastError - trainError > 0.02) {
                     cout << "\nsaving the parameters of the best pop...";
                     saveRight << gen << "\t" << setw(16) << setiosflags(ios::left)
                               << 1 - trainError << setw(24) << testRight << endl;
@@ -312,36 +312,46 @@ void RBM::train(double permitError, uint maxGens)
     saveBestReTrain("reTrain.txt");
 }
 //将RBM最后一层的数据输出到文件
-void RBM::saveRBMOutToFile(const string& file)
+void RBM::saveRBMOutToFile(const string& file,bool enableTrainSet, bool enableTestset)
 {
     ofstream fileOut(file.c_str());
     if (fileOut.is_open()) {
-        vector<RBMInput> rbmOut = getRBMOut();
+        vector<RBMInput> rbmOut = getRBMOut(enableTrainSet, enableTestset);
         for (uint s = 0; s < rbmOut.size(); ++s) {
             for (uint i = 0; i < rbmOut[s].data.size(); ++i)
                 fileOut << setw(8) << setiosflags(ios::left) << setprecision(3)
                         << setiosflags(ios::fixed) << rbmOut[s].data[i];
-            fileOut << "\t" << rbmOut[s].tag << endl;
+            fileOut << '\t' << rbmOut[s].tag << endl;
         }
         fileOut.close();
     }
 }
 //得到RBM的最后一层的输出
-vector<RBM::RBMInput> RBM::getRBMOut()
+vector<RBM::RBMInput> RBM::getRBMOut(bool enableTrainSet, bool enableTestset)
 {
-    vector<RBMInput> rbmOut(trainSet.size() + testSet.size());
+    size_t outSize = 0;
+    if (enableTrainSet)
+        outSize += trainSet.size();
+    if (enableTestset)
+        outSize +=  testSet.size();
+    vector<RBMInput> rbmOut(outSize);
     uint best = findBestPop(), i, h;
-    for (i = 0; i < trainSet.size(); ++i) {
-        forward(trainSet[i].data, hidden[0], rbmPop[best].weight[0], rbmPop[best].hbias[0]);
-        for (h = 1; h < hidden.size(); ++h) //更新隐层h
-            forward(hidden[h - 1], hidden[h], rbmPop[best].weight[h], rbmPop[best].hbias[h]);
-        rbmOut[i] = { hidden[h - 1], trainSet[i].tag };
+    if (enableTrainSet) {
+        for (i = 0; i < trainSet.size(); ++i) {
+            forward(trainSet[i].data, hidden[0], rbmPop[best].weight[0], rbmPop[best].hbias[0]);
+            for (h = 1; h < hidden.size(); ++h) //更新隐层h
+                forward(hidden[h - 1], hidden[h], rbmPop[best].weight[h], rbmPop[best].hbias[h]);
+            rbmOut[i] = { hidden[h - 1], trainSet[i].tag };
+        }
     }
-    for (i = 0; i < testSet.size(); ++i) {
-        forward(testSet[i].data, hidden[0], rbmPop[best].weight[0], rbmPop[best].hbias[0]);
-        for (h = 1; h < hidden.size(); ++h) //更新隐层h
-            forward(hidden[h - 1], hidden[h], rbmPop[best].weight[h], rbmPop[best].hbias[h]);
-        rbmOut[i + trainSet.size()] = { hidden[h - 1], testSet[i].tag };
+    if (enableTestset) {
+        uint outStart = enableTrainSet ? trainSet.size() : 0;
+        for (i = 0; i < testSet.size(); ++i) {
+            forward(testSet[i].data, hidden[0], rbmPop[best].weight[0], rbmPop[best].hbias[0]);
+            for (h = 1; h < hidden.size(); ++h) //更新隐层h
+                forward(hidden[h - 1], hidden[h], rbmPop[best].weight[h], rbmPop[best].hbias[h]);
+            rbmOut[i + outStart] = { hidden[h - 1], testSet[i].tag };
+        }
     }
     return rbmOut;
 }
@@ -433,40 +443,37 @@ uint RBM::findBestPop()
     return bestPopIndex;
 }
 
-/* usage:
-int main() {
-    cout << RBM::getDateTime().c_str() << endl;
+/** //usage:
+typedef struct {
+    string file; //训练集文件
+    int n_out;   //输出层个数
+    int n_train; //训练集个数
+} TrainTxt;
+
+TrainTxt tt__[] = {
+    { "./train_test/train01.txt", 2, 250},  //[0]
+    { "./train_test/train0123.txt", 4, 500},   //[1]
+    { "./train_test/train012345.txt", 6, 750},    //[2]
+    { "./train_test/train01234567.txt", 8, 1000},   //[3]
+    { "./train_test/train0123456789.txt", 10, 1250},   //[4]
+};
+
+int main()
+{
+    TrainTxt& tt = tt__[1]; ///通过修改序号载入不同的训练集
+    cout << Math_Util::getDateTime() << "\t" << tt.file << "\t" << tt.n_train << endl;
     SetText(FG_HL | FG_G | FG_B);
     try {
-        //Param::loadINI("set.ini","RBM");
         int hideUnits[] = { 100, 25 };
         RBM rbm(784, hideUnits);
-
-        cout << "\r>>>正在载入训练数据和测试数据...";
-        time_t t_start = clock();
-        rbm.loadTrain("D:/train_test/train0123.txt", 100);
-        cout << "\r载入训练和测试数据耗时: " << (clock() - t_start) << "ms" << endl;
-
-        t_start = clock();
-        rbm.train(0.0001, 10000);    //允许误差和最大代数，任意一个满足则停止
-        cout << "\n演化共耗时: " << (clock() - t_start) / 1000.0 << " s" << endl;
-
-        t_start = clock();
-        cout << "rbm最后一个隐层的输出为：" << endl;
-        vectorF2D rbmOut = rbm.getRBMOut();
-        for (uint i = 0; i < rbmOut.size();++i) {
-            for (uint j = 0; j < rbmOut[i].size(); ++j)
-                cout << rbmOut[i][j] << "  ";
-            cout << endl;
-        }
-        cout << "耗时：" << clock() - t_start << endl;
-    }
-    catch (const char* str) {
-        cout << "\n--error:" << str << endl;
-    }
-    catch (...) {
+        rbm.loadTrainSet(tt.file, tt.n_train);
+        rbm.train(0.02, 10000);  //允许误差和最大代数,任意一个满足则停止
+    } catch (const logic_error& err) {
+        cout << "\r---error:" << err.what() << endl;
+    } catch (...) {
         cout << "\nOops, there are some jokes in the runtime \\(╯-╰)/" << endl;
     }
+    cin.get();
     return 0;
 }
 */

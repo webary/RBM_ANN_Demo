@@ -29,7 +29,7 @@ public:
     //双曲正切S型函数，连续可微，值域(-1，1)）
     static double tansig(double x)
     {
-        return 2 * sigmoid(x) - 1;
+        return 2 * sigmoid(2 * x) - 1;
     }
 
     //设置随机数种子,仅设置一次

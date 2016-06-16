@@ -19,14 +19,17 @@ TrainTxt tt__[] = {
 
 int main()
 {
-    TrainTxt& tt = tt__[1]; ///通过修改序号载入不同的训练集
+    int idx = GetPrivateProfileInt("RBM", "TrainTxtIdx", 0, ".\\set.ini");
+    char learnRate[10] = "";
+    GetPrivateProfileString("RBM", "LearnRate", "0.1", learnRate, 10, ".\\set.ini");
+    TrainTxt& tt = tt__[idx]; ///通过修改序号载入不同的训练集
     cout << Math_Util::getDateTime() << "\t" << tt.file << "\t" << tt.n_train << endl;
     SetText(FG_HL | FG_G | FG_B);
     try {
-        int hideUnits[] = { 100, 25 };
-        RBM rbm(784, hideUnits);
+        int hideUnits[] = { 196, 49 };
+        RBM rbm(784, hideUnits, atof(learnRate));
         rbm.loadTrainSet(tt.file, tt.n_train);
-        rbm.train(0.02, 10000);  //允许误差和最大代数,任意一个满足则停止
+        rbm.train(0.01, 10000);  //允许误差和最大代数,任意一个满足则停止
     } catch (const logic_error& err) {
         cout << "\r---error:" << err.what() << endl;
     } catch (...) {
