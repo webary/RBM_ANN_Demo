@@ -3,28 +3,28 @@
 整个项目代码的主入口是RBM_ANN_Main.cpp
 
 1.先将代码所在目录的train_test.7z压缩文件解压到代码所在目录，形成以下目录结构：
+```---------------------------
+|-说明.txt  
+|-RBM_ANN.sln  
+|-RBM_ANN  
+  |-ANN.cpp  	
+  |-ANN.h  
+  |-RBM.cpp  
+  |-RBM.h  
+  |-MathUtil.hpp  
+  |-Win_Util.h  
+  |-RBM_ANN_Main.cpp  
+  |-set.ini  
+  |-RE2JPG.exe  
+  |-saveRGBToFile.exe  
+  |-train_test  
+    |-train01.txt  
+    |-train0123.txt  
+    |-train012345.txt  
+    |-train01234567.txt  
+    |-train0123456789.txt  
 ---------------------------
-|-说明.txt
-|-RBM_ANN.sln
-|-RBM_ANN
-  |-ANN.cpp	
-  |-ANN.h
-  |-RBM.cpp
-  |-RBM.h
-  |-MathUtil.hpp
-  |-Win_Util.h
-  |-RBM_ANN_Main.cpp
-  |-set.ini
-  |-RE2JPG.exe
-  |-saveRGBToFile.exe
-  |-train_test
-    |-train01.txt
-    |-train0123.txt
-    |-train012345.txt
-    |-train01234567.txt
-    |-train0123456789.txt
----------------------------
-
+```
 2.RBM_Main.cpp中有一个全局结构体变量g_tt用于保存若干可用的数据集信息，
 可通过在配置文件set.ini中修改RBM_ANN节点的TrainTxtIdx值改变数据集组序号。
 
