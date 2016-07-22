@@ -5,9 +5,9 @@
 using namespace std;
 
 typedef struct {
-    string file; //ÑµÁ·¼¯ÎÄ¼þ
-    int n_out;   //Êä³ö²ã¸öÊý
-    int n_train; //ÑµÁ·¼¯¸öÊý
+    string file; //è®­ç»ƒé›†æ–‡ä»¶è·¯å¾„
+    int n_out;   //è¾“å‡ºå±‚ä¸ªæ•°
+    int n_train; //è®­ç»ƒé›†ä¸ªæ•°
 } TrainTxt;
 
 TrainTxt tt__[] = {
@@ -29,13 +29,13 @@ void getImgPredictOut(RBM& rbm, ANN& ann)
         ofstream fout("tmp");
         cout.rdbuf(fout.rdbuf());
         rbm.loadTestSet(saveToFile, 0, 0);
-        DeleteFile(saveToFile);
         rbm.saveRBMOutToFile("rbm.out", 0);
         ann.loadTestSet("rbm.out", 0, 0);
-        DeleteFile("rbm.out");
         vector<int> tags = ann.getTestOut();
         fout.close();
         cout.rdbuf(coutBuf);
+        DeleteFile(saveToFile);
+        DeleteFile("rbm.out");
         DeleteFile("tmp");
         for (auto& elem : tags)
             cout << elem << " ";
@@ -48,27 +48,27 @@ int main()
     int idx = GetPrivateProfileInt("RBM_ANN", "TrainTxtIdx", 0, ".\\set.ini");
     char learnRate[10] = "";
     GetPrivateProfileString("RBM_ANN", "LearnRate", "0.3", learnRate, 10, ".\\set.ini");
-    TrainTxt& tt = tt__[idx]; ///Í¨¹ýÐÞ¸ÄÐòºÅÔØÈë²»Í¬µÄÑµÁ·¼¯
+    TrainTxt& tt = tt__[idx]; ///é€šè¿‡ä¿®æ”¹åºå·è½½å…¥ä¸åŒçš„è®­ç»ƒé›†
     cout << Math_Util::getDateTime() << "\t" << tt.file << "\t" << tt.n_train << endl;
     SetText(FG_HL | FG_G | FG_B);
     try {
         int hideUnits[] = { 196, 49 };
         RBM rbm(784, hideUnits, atof(learnRate));
         rbm.loadTrainSet(tt.file, tt.n_train);
-        rbm.train(0.05, 10000);  //ÔÊÐíÎó²îºÍ×î´ó´úÊý£¬ÈÎÒâÒ»¸öÂú×ãÔòÍ£Ö¹
-        rbm.saveRBMOutToFile("rbmOut.txt"); //½«RBMµÄÊä³ö²ãÒÔ¼°±êÇ©±£´æµ½ÎÄ¼þ
+        rbm.train(0.05, 10000);  //å…è®¸è¯¯å·®å’Œæœ€å¤§ä»£æ•°ï¼Œä»»æ„ä¸€ä¸ªæ»¡è¶³åˆ™åœæ­¢
+        rbm.saveRBMOutToFile("rbmOut.txt"); //å°†RBMçš„è¾“å‡ºå±‚ä»¥åŠæ ‡ç­¾ä¿å­˜åˆ°æ–‡ä»¶
         uint rbmOutSize = hideUnits[sizeof(hideUnits) / sizeof(hideUnits[0]) - 1];
         cout << endl;
-        ///½«RBM³éÈ¡µÄÌØÕ÷ËÍµ½ANNÖÐ½øÐÐ·ÖÀà
-        ANN ann(rbmOutSize, tt.n_out, 1); //ÊäÈëÊý¾Ý´óÐ¡,Êä³ö²ãÉñ¾­Ôª¸öÊý,Òþ²ã²ãÊý
-        ann.loadTrainSet("rbmOut.txt"); //¶ÁÈ¡RBMµÄÊä³ö×÷ÎªANNµÄÑµÁ·Êý¾Ý
+        //å°†RBMæŠ½å–çš„ç‰¹å¾é€åˆ°ANNä¸­è¿›è¡Œåˆ†ç±»
+        ANN ann(rbmOutSize, tt.n_out, 1); //è¾“å…¥æ•°æ®å¤§å°,è¾“å‡ºå±‚ç¥žç»å…ƒä¸ªæ•°,éšå±‚å±‚æ•°
+        ann.loadTrainSet("rbmOut.txt"); //è¯»å–RBMçš„è¾“å‡ºä½œä¸ºANNçš„è®­ç»ƒæ•°æ®
         ann.train(0.001, 1000000);
         getImgPredictOut(rbm, ann);
     } catch (const logic_error& err) {
         cout << "\r---error:" << err.what() << endl;
     } catch (...) {
         cout << "\nOops, there are some jokes in the runtime,"
-             "I am lost in the jungle\\(¨s-¨t)/" << endl;
+             "I am lost in the jungle\\(â•¯-â•°)/" << endl;
     }
     cin.get();
     return 0;
