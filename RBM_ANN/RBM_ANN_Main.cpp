@@ -4,13 +4,13 @@
 #include <iostream>
 using namespace std;
 
-typedef struct {
+struct TrainTxt{
     string file; //训练集文件路径
     int n_out;   //输出层个数
     int n_train; //训练集个数
-} TrainTxt;
+};
 
-TrainTxt tt__[] = {
+TrainTxt g_tt[] = {
     { "./train_test/train01.txt", 2, 250},  //[0]
     { "./train_test/train0123.txt", 4, 500},   //[1]
     { "./train_test/train012345.txt", 6, 750},    //[2]
@@ -48,7 +48,7 @@ int main()
     int idx = GetPrivateProfileInt("RBM_ANN", "TrainTxtIdx", 0, ".\\set.ini");
     char learnRate[10] = "";
     GetPrivateProfileString("RBM_ANN", "LearnRate", "0.3", learnRate, 10, ".\\set.ini");
-    TrainTxt& tt = tt__[idx]; ///通过修改序号载入不同的训练集
+    TrainTxt& tt = g_tt[idx]; ///通过修改序号载入不同的训练集
     cout << Math_Util::getDateTime() << "\t" << tt.file << "\t" << tt.n_train << endl;
     SetText(FG_HL | FG_G | FG_B);
     try {
